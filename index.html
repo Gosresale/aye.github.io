@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>WST</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-black: #040609;
+            --card-bg: #0c101b;
+            --card-border: rgba(255, 255, 255, 0.05);
+            --neon-green: #00ff66;
+            --neon-cyan: #00e5ff;
+            --gold: #ffb700;
+            --neon-red: #ff3366;
+            --text-white: #ffffff;
+            --text-gray: #687894;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #07090e;
+            color: var(--text-white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Адаптивный контейнер: Гарантирует 100% видимость на любых мониторах */
+        .app-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background-color: var(--bg-black);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+        }
+
+        @media (min-width: 480px) {
+            .app-container {
+                width: 385px;
+                height: 82vh; /* Оптимальная высота, чтобы всё было видно без прокрутки самого браузера */
+                max-height: 780px;
+                border-radius: 36px;
+                border: 10px solid #161c28;
+            }
+            /* Динамический остров */
+            .app-container::before {
+                content: '';
+                position: absolute;
+                top: 10px; left: 50%;
+                transform: translateX(-50%);
+                width: 110px; height: 24px;
+                background: #000;
+                border-radius: 20px;
+                z-index: 999;
+            }
+        }
+
+        /* Статус-бар смартфона */
+        .status-bar {
+            padding: 12px 22px 4px 22px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.4);
+            z-index: 10;
+        }
+        .status-bar .icons i { margin-left: 4px; }
+
+        /* Чистая шапка WST */
+        .app-header {
+            padding: 8px 20px 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            background: rgba(4,6,9,0.85);
+            backdrop-filter: blur(12px);
+            z-index: 10;
+        }
+
+        .logo-text {
+            font-family: 'Cabinet Grotesk', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 40%, var(--neon-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .online-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 255, 102, 0.08);
+            border: 1px solid rgba(0, 255, 102, 0.15);
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--neon-green);
+        }
+        .pulse-dot {
+            width: 5px; height: 5px;
+            background-color: var(--neon-green);
+            border-radius: 50%;
+            animation: pulse 1.4s infinite alternate;
+        }
+
+        /* Область отображения экранов */
+        .app-viewport {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 14px 100px 14px;
+        }
+        .app-viewport::-webkit-scrollbar { display: none; }
+
+        .view-pane {
+            display: none;
+            animation: slide-up 0.3s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+        .view-pane.active-pane { display: block; }
+
+        /* ЭКРАН 1: Главная (Клуб) */
+        .hero-card {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+        .hero-card img { width: 100%; height: 100%; object-fit: cover; object-position: center 15%; }
+        .hero-shadow {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, #040609 15%, rgba(4,6,9,0.3) 65%, transparent);
+            display: flex; flex-direction: column; justify-content: flex-end; padding: 18px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 14px; border-radius: 16px; text-align: center;
+        }
+        .stat-val { font-size: 1.35rem; font-weight: 800; color: #fff; }
+        .stat-val.green { color: var(--neon-green); }
+        .stat-val.gold { color: var(--gold); }
+        .stat-lbl { font-size: 0.7rem; color: var(--text-gray); margin-top: 3px; text-transform: uppercase; font-weight: 600; }
+
+        .headline-accent {
+            font-family: 'Cabinet Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin: 18px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .headline-accent span { color: var(--neon-green); }
+
+        .hustle-motivation {
+            background: linear-gradient(135deg, rgba(0, 255, 102, 0.08), rgba(0, 229, 255, 0.03));
+            border: 1px solid rgba(0, 255, 102, 0.15);
+            padding: 14px; border-radius: 16px; font-size: 0.85rem; font-weight: 600; line-height: 1.4; text-align: center;
+        }
+
+        /* ЭКРАН 2: Обучение */
+        .course-card {
+            background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; margin-bottom: 8px; overflow: hidden;
+        }
+        .course-header {
+            padding: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 700; font-size: 0.85rem;
+        }
+        .course-header i { color: var(--neon-cyan); transition: transform 0.2s; }
+        .course-card.expanded .course-header i { transform: rotate(180deg); }
+        .course-body {
+            display: none; padding: 0 14px 14px 14px; font-size: 0.78rem; color: var(--text-gray); line-height: 1.4; border-top: 1px solid rgba(255,255,255,0.02);
+        }
+        .course-card.expanded .course-body { display: block; }
+
+        /* Квиз */
+        .app-quiz { background: #0f1424; border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; padding: 16px; margin-top: 15px; }
+        .quiz-option {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); padding: 10px 12px; border-radius: 10px; margin-top: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 500;
+        }
+        .quiz-option.correct-ans { background: rgba(0, 255, 102, 0.12); border-color: var(--neon-green); color: var(--neon-green); }
+        .quiz-option.wrong-ans { background: rgba(255, 51, 102, 0.12); border-color: var(--neon-red); color: var(--neon-red); }
+
+        /* ЭКРАН 3: Закрытый Центр Заработка (Огромный новый функционал) */
+        .sub-nav-row {
+            display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px;
+        }
+        .sub-nav-row::-webkit-scrollbar { display: none; }
+        .sub-tab-btn {
+            background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-gray); padding: 8px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.2s;
+        }
+        .sub-tab-btn.active-sub { background: var(--neon-green); color: #000; border-color: var(--neon-green); }
+
+        .sub-view-pane { display: none; }
+        .sub-view-pane.active-sub-pane { display: block; }
+
+        /* Модуль 1: Офферы */
+        .offer-item-card {
+            background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 14px; margin-bottom: 10px;
+        }
+        .offer-header-info { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
+        .offer-badge { background: rgba(0,229,255,0.1); color: var(--neon-cyan); font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; }
+        .offer-payout { color: var(--neon-green); font-weight: 800; font-size: 0.9rem; }
+        .offer-title-text { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+        .offer-descr { font-size: 0.75rem; color: var(--text-gray); line-height: 1.3; margin-bottom: 12px; }
+        .offer-action-btn {
+            background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); color: #fff; width: 100%; padding: 10px; border-radius: 10px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        }
+        .offer-action-btn.activated { background: var(--neon-green); color: #000; border-color: var(--neon-green); }
+
+        /* Модуль 2: Конструктор резюме */
+        .form-input-element { margin-bottom: 10px; }
+        .form-input-element label { display: block; font-size: 0.7rem; color: var(--text-gray); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+        .form-control-field {
+            width: 100%; background: #07090e; border: 1px solid var(--card-border); padding: 10px 12px; border-radius: 10px; color: #fff; font-size: 0.85rem; outline: none;
+        }
+        .resume-render-output {
+            background: #06080c; border: 1px dashed rgba(255,255,255,0.15); padding: 12px; border-radius: 10px; margin-top: 12px; font-size: 0.75rem; line-height: 1.4; color: #cbd5e1; white-space: pre-line; display: none;
+        }
+
+        /* Модуль 3: Калькулятор */
+        .metric-output-row {
+            background: rgba(255,255,255,0.02); padding: 10px 14px; border-radius: 10px; margin-top: 8px; display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600;
+        }
+
+        /* ЭКРАН 4: Чат */
+        .chat-app-wrapper {
+            background: #06080c; border: 1px solid var(--card-border); border-radius: 18px; height: 350px; display: flex; flex-direction: column; overflow: hidden;
+        }
+        .chat-messages-container { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .chat-messages-container::-webkit-scrollbar { display: none; }
+        .chat-bubble-item { max-width: 85%; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); padding: 8px 12px; border-radius: 14px 14px 14px 4px; font-size: 0.78rem; line-height: 1.35; }
+        .chat-bubble-item.own-message { background: rgba(0, 229, 255, 0.08); border-color: rgba(0,229,255,0.15); border-radius: 14px 14px 4px 14px; align-self: flex-end; }
+        .chat-msg-info { font-size: 0.7rem; font-weight: 700; margin-bottom: 2px; display: flex; justify-content: space-between; gap: 10px; }
+        .chat-user-name { color: var(--neon-green); }
+        .chat-bubble-item.own-message .chat-user-name { color: var(--neon-cyan); }
+
+        .chat-controls-footer { padding: 8px; border-top: 1px solid var(--card-border); display: flex; gap: 6px; background: var(--card-bg); }
+        .chat-input-box { flex: 1; background: #06080c; border: 1px solid var(--card-border); padding: 8px 12px; border-radius: 8px; color: #fff; font-size: 0.8rem; outline: none; }
+        .chat-send-trigger { width: 36px; height: 36px; background: var(--neon-green); color: #000; border: none; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 0.85rem; }
+
+        /* ЭКРАН 5: Кабинет */
+        .profile-hero-widget {
+            background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 16px; text-align: center; margin-bottom: 14px;
+        }
+        .profile-avatar-box {
+            width: 55px; height: 55px; background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan)); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: 900; color: #000; margin: 0 auto 10px auto;
+        }
+        .membership-status-tag {
+            display: inline-block; padding: 3px 12px; border-radius: 20px; background: rgba(255,183,0,0.1); border: 1px solid var(--gold); color: var(--gold); font-size: 0.7rem; font-weight: 700; margin-top: 4px;
+        }
+
+        /* Навигация (Нижний таб-бар) */
+        .bottom-app-nav {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 75px; background: rgba(4,6,9,0.92); backdrop-filter: blur(16px); border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 12px; z-index: 10;
+        }
+        .nav-item-btn {
+            display: flex; flex-direction: column; align-items: center; color: var(--text-gray); font-size: 0.65rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .nav-item-btn i { font-size: 1.15rem; margin-bottom: 3px; }
+        .nav-item-btn.active-nav-item { color: var(--neon-green); }
+
+        /* Окно Оплаты */
+        .app-modal-overlay {
+            position: absolute; inset: 0; background: rgba(4,6,9,0.95); backdrop-filter: blur(8px); z-index: 100; display: none; justify-content: center; align-items: center; padding: 20px;
+        }
+        .modal-card-box {
+            background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 20px; width: 100%; text-align: center;
+        }
+        .payment-option-row {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 600; font-size: 0.85rem;
+        }
+        .payment-option-row:hover { border-color: var(--neon-green); }
+
+        .btn-action-primary {
+            background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan)); color: #000; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-action-primary:active { transform: scale(0.98); }
+
+        /* Анимации */
+        @keyframes slide-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div class="status-bar">
+            <span id="live-phone-time">09:41</span>
+            <div class="icons">
+                <i class="fa-solid fa-signal"></i>
+                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-battery-full"></i>
+            </div>
+        </div>
+
+        <header class="app-header">
+            <div class="logo-text">WST</div>
+            <div class="online-badge"><div class="pulse-dot"></div> 1000+ В КЛУБЕ</div>
+        </header>
+
+        <main class="app-viewport" id="viewportScroll">
+            
+            <div id="view-club" class="view-pane active-pane">
+                <div class="hero-card">
+                    <img src="isa.jpg" alt="WST Media Center">
+                    <div class="hero-shadow">
+                        <div style="color:var(--gold); font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:1px;">Hustlers Platform</div>
+                        <h2 style="font-family:'Cabinet Grotesk',sans-serif; font-size:1.4rem; font-weight:900;">СНГ Сообщество</h2>
+                    </div>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-val green">2-2.5к$</div>
+                        <div class="stat-lbl">Ср. доход хастлера</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val gold">1000+</div>
+                        <div class="stat-lbl">Людей в экосистеме</div>
+                    </div>
+                </div>
+
+                <div class="hustle-motivation">
+                    ебучий концентрат сильнейших людей в одном сообществе. Твой рывок в уровне жизни и чистом профите.
+                </div>
+                
+                <h3 class="headline-accent">Направления <span>Заработка:</span></h3>
+                <p style="font-size:0.78rem; color:var(--text-gray); line-height:1.4; margin-bottom:10px;">Большая часть участников делают деньги в следующих нишах:</p>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.8rem; font-weight:600;">
+                    <div style="padding:10px; background:var(--card-bg); border-radius:10px;"><i class="fa-solid fa-comments-dollar" style="color:var(--neon-green)"></i> Продажи</div>
+                    <div style="padding:10px; background:var(--card-bg); border-radius:10px;"><i class="fa-solid fa-chart-pie" style="color:var(--neon-cyan)"></i> Трафик</div>
+                    <div style="padding:10px; background:var(--card-bg); border-radius:10px;"><i class="fa-solid fa-box" style="color:var(--gold)"></i> Товарка</div>
+                    <div style="padding:10px; background:var(--card-bg); border-radius:10px;"><i class="fa-solid fa-coins" style="color:var(--neon-green)"></i> Крипта</div>
+                    <div style="padding:10px; background:var(--card-bg); border-radius:10px;"><i class="fa-solid fa-handshake" style="color:var(--neon-cyan)"></i> Услуги</div>
+                    <div style="padding:10px; background:var(--card-bg); border-radius:10px;"><i class="fa-solid fa-dumbbell" style="color:var(--gold)"></i> Фитнес</div>
+                    <div style="padding:10px; background:var(--card-bg); border-radius:10px; grid-column:span 2;"><i class="fa-solid fa-dice" style="color:var(--neon-red)"></i> Гэмблинг и Беттинг</div>
+                </div>
+            </div>
+
+            <div id="view-academy" class="view-pane">
+                <h3 class="headline-accent"><i class="fa-solid fa-graduation-cap" style="color:var(--neon-cyan);"></i> Программа <span>Развития</span></h3>
+                
+                <div class="course-card" onclick="toggleAccordion(this)">
+                    <div class="course-header"><span>1. Продажи: Текст и звонки</span><i class="fa-solid fa-chevron-down"></i></div>
+                    <div class="course-body">Фундаментальное обучение. Между вами и обычным человеком без WST будет очень большой барьер в понимании триггеров и закрытия сделок.</div>
+                </div>
+
+                <div class="course-card" onclick="toggleAccordion(this)">
+                    <div class="course-header"><span>2. Основы Копирайтинга</span><i class="fa-solid fa-chevron-down"></i></div>
+                    <div class="course-body">Правильно формулировать свои мысли и их излагать. Уметь вызывать дикий интерес людей через текст и основы психологии восприятия текста.</div>
+                </div>
+
+                <div class="course-card" onclick="toggleAccordion(this)">
+                    <div class="course-header"><span>3. Трафик Facebook / Instagram</span><i class="fa-solid fa-chevron-down"></i></div>
+                    <div class="course-body">Полное обучение по запуску таргетированной рекламы. Настройка кампаний, создание креативов, обход банов и аналитика связок.</div>
+                </div>
+
+                <div class="course-card" onclick="toggleAccordion(this)">
+                    <div class="course-header"><span>4. Эфиры и Живые разборы</span><i class="fa-solid fa-chevron-down"></i></div>
+                    <div class="course-body">Регулярные онлайн-эфиры по продажам, маркетингу, актуальным способам заработка в интернете и разборы кейсов участников клуба.</div>
+                </div>
+
+                <div class="app-quiz">
+                    <h4 style="font-size:0.85rem; color:var(--gold); margin-bottom:4px;"><i class="fa-solid fa-brain"></i> Проверка мышления:</h4>
+                    <p style="font-size:0.78rem; margin-bottom:10px; font-weight:600;">Что решает при поиске высокооплачиваемой работы/оффера?</p>
+                    <div class="quiz-option" onclick="runQuizCheck(this, false)">Спам стандартными резюме во все каналы</div>
+                    <div class="quiz-option" onclick="runQuizCheck(this, true)">Сильное окружение, закрытые офферы и готовое резюме от WST</div>
+                    <div id="quiz-alert" style="margin-top:10px; font-size:0.75rem; font-weight:700; text-align:center;"></div>
+                </div>
+            </div>
+
+            <div id="view-money" class="view-pane">
+                <div class="sub-nav-row">
+                    <button class="sub-tab-btn active-sub" onclick="switchSubPane('sub-offers', this)">Закрытые Офферы</button>
+                    <button class="sub-tab-btn" onclick="switchSubPane('sub-resume', this)">Конструктор Резюме</button>
+                    <button class="sub-tab-btn" onclick="switchSubPane('sub-calc', this)">Калькулятор Трафика</button>
+                </div>
+
+                <div id="sub-offers" class="sub-view-pane active-sub-pane">
+                    <div class="offer-item-card">
+                        <div class="offer-header-info"><span class="offer-badge">ПРОДАЖИ</span><span class="offer-payout">$1,500+ / мес</span></div>
+                        <div class="offer-title-text">Менеджер по закрытию сделок</div>
+                        <div class="offer-descr">Обработка горячих входящих лидов в сильные инфопродукты. Скрипты WST предоставляются кураторами. Полное сопровождение.</div>
+                        <button class="offer-action-btn" onclick="takeOfferInWork(this)">Взять в работу</button>
+                    </div>
+                    <div class="offer-item-card">
+                        <div class="offer-header-info"><span class="offer-badge" style="color:var(--neon-cyan); background:rgba(0,229,255,0.1);">ТРАФИК</span><span class="offer-payout">40-50% RevShare</span></div>
+                        <div class="offer-title-text">Арбитраж: Gambling & Betting оферы</div>
+                        <div class="offer-descr">Залив трафика через Facebook/Instagram на проверенные гемблинг-продукты с высокой конверсией. Доступ к приватным расходникам клуба.</div>
+                        <button class="offer-action-btn" onclick="takeOfferInWork(this)">Взять в работу</button>
+                    </div>
+                    <div class="offer-item-card">
+                        <div class="offer-header-info"><span class="offer-badge" style="color:var(--gold); background:rgba(255,183,0,0.1);">ТОВАРКА</span><span class="offer-payout">$800 - $2,000</span></div>
+                        <div class="offer-title-text">Дропшиппинг: Трендовые офферы СНГ</div>
+                        <div class="offer-descr">Продажа актуальных товаров без личного закупа склада. Белая товарка с настроенной логистикой и прозвоном заказов.</div>
+                        <button class="offer-action-btn" onclick="takeOfferInWork(this)">Взять в работу</button>
+                    </div>
+                </div>
+
+                <div id="sub-resume" class="sub-view-pane">
+                    <div class="offer-item-card" style="margin-bottom:10px;">
+                        <h4 style="font-size:0.85rem; margin-bottom:10px; color:var(--neon-cyan);"><i class="fa-solid fa-file-invoice-dollar"></i> Создание резюме с нуля</h4>
+                        <div class="form-input-element">
+                            <label>Ваше Имя / Ник</label>
+                            <input type="text" id="res-name" class="form-control-field" value="Dmitry">
+                        </div>
+                        <div class="form-input-element">
+                            <label>Желаемая ниша работы</label>
+                            <select id="res-niche" class="form-control-field" style="background:#07090e;">
+                                <option value="Менеджер по продажам (High-Ticket)">Продажи через текст и звонки</option>
+                                <option value="Трафик-менеджер FB/IG (Media Buyer)">Залив трафика и таргет</option>
+                                <option value="Управление товарными проектами">Товарный бизнес</option>
+                            </select>
+                        </div>
+                        <div class="form-input-element">
+                            <label>Твои сильные стороны</label>
+                            <input type="text" id="res-skills" class="form-control-field" value="База копирайтинга WST, закрытие возражений, знание основ FB-таргета">
+                        </div>
+                        <button class="btn-action-primary" onclick="buildHustlerResume()">Сгенерировать резюме WST</button>
+                        <div class="resume-render-output" id="resumeBox"></div>
+                    </div>
+                </div>
+
+                <div id="sub-calc" class="sub-view-pane">
+                    <div class="offer-item-card">
+                        <h4 style="font-size:0.85rem; margin-bottom:12px; color:var(--gold);"><i class="fa-solid fa-calculator"></i> Маржинальный ROI калькулятор</h4>
+                        <div class="form-input-element">
+                            <label>Рекламный Бюджет ($)</label>
+                            <input type="number" id="c-budget" class="form-control-field" value="300">
+                        </div>
+                        <div class="form-input-element">
+                            <label>Кол-во полученных кликов</label>
+                            <input type="number" id="c-clicks" class="form-control-field" value="1500">
+                        </div>
+                        <div class="form-input-element">
+                            <label>Кол-во закрытых продаж</label>
+                            <input type="number" id="c-sales" class="form-control-field" value="15">
+                        </div>
+                        <div class="form-input-element">
+                            <label>Ваш чистый чек с 1 продажи ($)</label>
+                            <input type="number" id="c-price" class="form-control-field" value="60">
+                        </div>
+                        <button class="btn-action-primary" onclick="executeTrafficMetrics()">Рассчитать показатели</button>
+                        
+                        <div class="metric-output-row"><span>Общий Вал:</span><span id="m-rev" style="color:#fff;">$900</span></div>
+                        <div class="metric-output-row"><span>Чистая прибыль:</span><span id="m-prof" style="color:var(--neon-green); font-weight:800;">$600</span></div>
+                        <div class="metric-output-row"><span>Показатель ROI:</span><span id="m-roi" style="color:var(--neon-cyan); font-weight:800;">200.0%</span></div>
+                        <div class="metric-output-row"><span>Цена клика (CPC):</span><span id="m-cpc" style="color:var(--text-gray);">$0.20</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-chat" class="view-pane">
+                <h3 class="headline-accent"><i class="fa-solid fa-comments" style="color:var(--neon-green);"></i> Комьюнити <span>(1000+)</span></h3>
+                <div class="chat-app-wrapper">
+                    <div class="chat-messages-container" id="chatArea">
+                        <div class="chat-bubble-item">
+                            <div class="chat-msg-info"><span class="chat-user-name">Хастлер_Маркетолог</span><span>15:40</span></div>
+                            <p>Ребята, обучение по таргету из базы — пушка. Запустил связку на товарку, лиды идут по $0.6. Окупаемость дикая.</p>
+                        </div>
+                        <div class="chat-bubble-item">
+                            <div class="chat-msg-info"><span class="chat-user-name">Арбитражник_WST</span><span>16:12</span></div>
+                            <p>Вчера закрыл через текст клиента на услуги по воронкам продаж, чек $1200. Основы копирайтинга WST решают, барьера в общении вообще нет.</p>
+                        </div>
+                    </div>
+                    <div class="chat-controls-footer">
+                        <input type="text" id="msgInput" class="chat-input-box" placeholder="Написать хастлерам...">
+                        <button class="chat-send-trigger" onclick="sendMessageInApp()"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-profile" class="view-pane">
+                <h3 class="headline-accent"><i class="fa-solid fa-user" style="color:var(--neon-cyan);"></i> Профиль <span>Участника</span></h3>
+                <div class="profile-hero-widget">
+                    <div class="profile-avatar-box">D</div>
+                    <h3 style="font-size:1.1rem; font-weight:800;" id="prof-display-name">Dmitry</h3>
+                    <p style="color:var(--text-gray); font-size:0.75rem; margin-top:1px;">@gosresale</p>
+                    <div class="membership-status-tag" id="statusLabel">WST ЧЛЕН КЛУБА</div>
+                </div>
+
+                <div class="offer-item-card" style="text-align:center;">
+                    <h4 style="font-size:0.85rem; margin-bottom:4px;">Ваша подписка</h4>
+                    <p style="font-size:0.75rem; color:var(--text-gray); margin-bottom:12px;">Цена всего золота: 12$/месяц. Доступ ко всем оферам и базе.</p>
+                    <button class="btn-action-primary" onclick="togglePaymentGateway()">Продлить доступ к WST</button>
+                </div>
+            </div>
+
+        </main>
+
+        <div class="app-modal-overlay" id="paymentOverlay">
+            <div class="modal-card-box">
+                <h3 style="font-family:'Cabinet Grotesk',sans-serif; font-size:1.2rem; margin-bottom:6px;">Вступить / Продлить WST</h3>
+                <p style="color:var(--text-gray); font-size:0.75rem; margin-bottom:16px;">Доступно для оплаты с любых карт СНГ/МИРА</p>
+                
+                <div class="payment-option-row" onclick="executeMockCheckout('Карт СНГ / МИР')">
+                    <span>Карты СНГ / МИР</span><i class="fa-solid fa-credit-card" style="color:var(--neon-green);"></i>
+                </div>
+                <div class="payment-option-row" onclick="executeMockCheckout('Международных карт')">
+                    <span>Любые карты МИРА</span><i class="fa-solid fa-globe" style="color:var(--neon-cyan);"></i>
+                </div>
+                <div class="payment-option-row" onclick="executeMockCheckout('Криптовалюты (USDT)')">
+                    <span>Криптовалюта (USDT)</span><i class="fa-brands fa-bitcoin" style="color:var(--gold);"></i>
+                </div>
+                <button class="btn-action-primary" style="background:#161c28; color:#fff; margin-top:10px;" onclick="togglePaymentGateway()">ОТМЕНА</button>
+            </div>
+        </div>
+
+        <nav class="bottom-app-nav">
+            <div class="nav-item-btn active-nav-item" onclick="changeAppViewport('view-club', this)">
+                <i class="fa-solid fa-wallet"></i>
+                <span>WST Клуб</span>
+            </div>
+            <div class="nav-item-btn" onclick="changeAppViewport('view-academy', this)">
+                <i class="fa-solid fa-book-open"></i>
+                <span>Развитие</span>
+            </div>
+            <div class="nav-item-btn" onclick="changeAppViewport('view-money', this)">
+                <i class="fa-solid fa-sack-dollar"></i>
+                <span>Заработок</span>
+            </div>
+            <div class="nav-item-btn" onclick="changeAppViewport('view-chat', this)">
+                <i class="fa-solid fa-comments"></i>
+                <span>Чат</span>
+            </div>
+            <div class="nav-item-btn" onclick="changeAppViewport('view-profile', this)">
+                <i class="fa-solid fa-user"></i>
+                <span>Кабинет</span>
+            </div>
+        </nav>
+
+    </div>
+
+    <script>
+        // 1. Системная навигация по вкладкам приложения
+        function changeAppViewport(paneId, tabBtn) {
+            document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active-pane'));
+            document.querySelectorAll('.nav-item-btn').forEach(b => b.classList.remove('active-nav-item'));
+            
+            document.getElementById(paneId).classList.add('active-pane');
+            tabBtn.classList.add('active-nav-item');
+            
+            document.getElementById('viewportScroll').scrollTop = 0;
+        }
+
+        // 2. Раскрытие списков Академии (Аккордеон)
+        function toggleAccordion(element) {
+            element.classList.toggle('expanded');
+        }
+
+        // 3. Переключение подвкладок внутри Центра Заработка
+        function switchSubPane(subPaneId, btn) {
+            document.querySelectorAll('.sub-view-pane').forEach(p => p.classList.remove('active-sub-pane'));
+            document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active-sub'));
+            
+            document.getElementById(subPaneId).classList.add('active-sub-pane');
+            btn.classList.add('active-sub');
+        }
+
+        // 4. Логика взятия оффера в работу
+        function takeOfferInWork(btn) {
+            btn.classList.add('activated');
+            btn.innerText = "В работе! Скрипты отправлены в ЛС";
+            btn.disabled = true;
+        }
+
+        // 5. Интерактивный Конструктор Резюме Хастлера
+        function buildHustlerResume() {
+            const name = document.getElementById('res-name').value.trim() || "Хастлер";
+            const niche = document.getElementById('res-niche').value;
+            const skills = document.getElementById('res-skills').value.trim();
+            const outputBox = document.getElementById('resumeBox');
+            
+            outputBox.style.display = "block";
+            outputBox.innerText = `РЕЗЮМЕ ДЛЯ ТРУДОУСТРОЙСТВА [БАЗА WST]
+            ---------------------------------------
+            КАНДИДАТ: ${name}
+            НАПРАВЛЕНИЕ: ${niche}
+            ФУНДАМЕНТ: Пройдено обучение в закрытом комьюнити WST. Сформированы навыки преодоления барьеров общения, основы копирайтинга и удержания внимания лидов.
+            
+            КЛЮЧЕВЫЕ НАВЫКИ:
+            - ${skills}
+            - Прямые продажи по ценностным триггерам через текст/звонки.
+            
+            СТАТУС: Готов взять оффер в работу, упаковать резюме под команду и дать моментальный профит.`;
+            
+            // Динамически обновляем имя в профиле для реализма
+            document.getElementById('prof-display-name').innerText = name;
+        }
+
+        // 6. Продвинутый калькулятор трафика (ROI/CPC)
+        function executeTrafficMetrics() {
+            const budget = parseFloat(document.getElementById('c-budget').value) || 0;
+            const clicks = parseFloat(document.getElementById('c-clicks').value) || 1;
+            const sales = parseFloat(document.getElementById('c-sales').value) || 0;
+            const price = parseFloat(document.getElementById('c-price').value) || 0;
+            
+            const revenue = sales * price;
+            const profit = revenue - budget;
+            const roi = budget > 0 ? ((profit / budget) * 100).toFixed(1) : 0;
+            const cpc = (budget / clicks).toFixed(2);
+            
+            document.getElementById('m-rev').innerText = '$' + revenue;
+            document.getElementById('m-prof').innerText = '$' + profit;
+            document.getElementById('m-roi').innerText = roi + '%';
+            document.getElementById('m-cpc').innerText = '$' + cpc;
+        }
+
+        // 7. Интерактивный Квиз Академии
+        function runQuizCheck(opt, isCorrect) {
+            const parent = opt.parentElement;
+            parent.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('correct-ans', 'wrong-ans'));
+            
+            const alertBox = document.getElementById('quiz-alert');
+            if(isCorrect) {
+                opt.classList.add('correct-ans');
+                alertBox.innerText = "🎯 Абсолютно верно! У одиночек в открытом доступе нет шансов.";
+                alertBox.style.color = "var(--neon-green)";
+            } else {
+                opt.classList.add('wrong-ans');
+                alertBox.innerText = "❌ Мимо. Шаблонный спам проигрывает экосистеме WST.";
+                alertBox.style.color = "var(--neon-red)";
+            }
+        }
+
+        // 8. Интерактивный Чат с автоответчиком сообщества
+        function sendMessageInApp() {
+            const input = document.getElementById('msgInput');
+            const txt = input.value.trim();
+            if(!txt) return;
+            
+            const area = document.getElementById('chatArea');
+            const myBubble = document.createElement('div');
+            myBubble.className = 'chat-bubble-item own-message';
+            myBubble.innerHTML = `
+                <div class="chat-msg-info"><span class="chat-user-name">Вы</span><span>Только что</span></div>
+                <p>${txt}</p>
+            `;
+            area.appendChild(myBubble);
+            input.value = '';
+            area.scrollTop = area.scrollHeight;
+            
+            // Симулируем мгновенный экспертный фидбек от комьюнити через 1.2 сек
+            setTimeout(() => {
+                const replies = [
+                    "Красава! Хороший подход. Мы как раз в закрытом канале это сейчас обсуждаем.",
+                    "Оффер составлен по канонам WST. Залетай в инструменты, посчитай под него ROI.",
+                    "Сильно! Если нужен будет созвон или разбор — пиши кураторам, они докрутят скрипт.",
+                    "Четко изложил мысли. Копирайтинг решает."
+                ];
+                const rndReply = replies[Math.floor(Math.random() * replies.length)];
+                const otherBubble = document.createElement('div');
+                otherBubble.className = 'chat-bubble-item';
+                otherBubble.innerHTML = `
+                    <div class="chat-msg-info"><span class="chat-user-name">Хастлер_${Math.floor(Math.random()*900+100)}</span><span>Только что</span></div>
+                    <p>${rndReply}</p>
+                `;
+                area.appendChild(otherBubble);
+                area.scrollTop = area.scrollHeight;
+            }, 1200);
+        }
+
+        // 9. Модалка оплаты
+        function togglePaymentGateway() {
+            const m = document.getElementById('paymentOverlay');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+        function executeMockCheckout(method) {
+            alert('Генерация безопасной платежной ссылки WST через: ' + method + '\nСумма: 12$');
+            togglePaymentGateway();
+            document.getElementById('statusLabel').innerText = "ПОДПИСКА ПРОДЛЕНА";
+            document.getElementById('statusLabel').style.color = "var(--neon-green)";
+            document.getElementById('statusLabel').style.borderColor = "var(--neon-green)";
+        }
+
+        // Часы статус-бара
+        function syncClock() {
+            const d = new Date();
+            document.getElementById('live-phone-time').innerText = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        }
+        setInterval(syncClock, 1000);
+        syncClock();
+    </script>
+</body>
+</html>
