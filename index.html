@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WST — Концентрат Сильнейших Хастлеров СНГ</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-dark: #030305;
+            --bg-card: #0a0a0f;
+            --accent-green: #00ffaa;
+            --accent-cyan: #00e5ff;
+            --accent-purple: #7000ff;
+            --text-main: #f5f5f7;
+            --text-muted: #62627a;
+            --border: rgba(255, 255, 255, 0.03);
+            --glow-green: rgba(0, 255, 170, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ХЕДЕР С ЖИВОЙ СТАТИСТИКОЙ */
+        header {
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(3, 3, 5, 0.8);
+        }
+
+        .header-wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .live-counters {
+            display: flex;
+            gap: 25px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .counter-item span {
+            color: var(--accent-green);
+        }
+
+        /* HERO СЕКЦИЯ */
+        .hero {
+            padding: 60px 0 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--glow-green) 0%, transparent 70%);
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .badge-main {
+            background: rgba(0, 255, 170, 0.07);
+            border: 1px solid rgba(0, 255, 170, 0.2);
+            color: var(--accent-green);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, #fff 40%, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+
+        .btn-cta {
+            background: #fff;
+            color: #000;
+            padding: 18px 45px;
+            border-radius: 14px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .btn-cta:hover {
+            background: var(--accent-green);
+            box-shadow: 0 0 30px var(--accent-green);
+            transform: translateY(-2px);
+        }
+
+        /* СЕКЦИЯ СФЕР ЗАРАБОТКА */
+        .spheres-section {
+            padding: 40px 0;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            margin-bottom: 30px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .section-title span {
+            color: var(--accent-green);
+        }
+
+        .spheres-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+        }
+
+        .sphere-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sphere-card:hover {
+            border-color: var(--accent-cyan);
+        }
+
+        .sphere-card h3 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .sphere-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* АКАДЕМИЯ */
+        .academy-section {
+            padding: 50px 0;
+            background: linear-gradient(180deg, transparent, rgba(112,0,255,0.02), transparent);
+        }
+
+        .skills-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .skill-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 18px;
+            border-radius: 16px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .skill-icon {
+            font-size: 1.4rem;
+            line-height: 1;
+        }
+
+        .skill-text h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .skill-text p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* ДЛЯ КОГО */
+        .audience-section {
+            padding: 40px 0;
+        }
+
+        .tabs-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .tab-btn.active {
+            border-color: var(--accent-green);
+            color: #fff;
+            box-shadow: 0 0 15px var(--glow-green);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ВНУТРЯНКА */
+        .inside-section {
+            padding: 40px 0;
+        }
+
+        .inside-panel {
+            background: linear-gradient(135deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 35px 20px;
+            text-align: center;
+        }
+
+        .income-massive {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--accent-green);
+            text-shadow: 0 0 30px var(--glow-green);
+            margin: 15px 0;
+        }
+
+        /* PAYWALL */
+        .paywall-section {
+            padding: 60px 0 100px;
+            text-align: center;
+        }
+
+        .pricing-card {
+            background: #0d0d14;
+            border: 1px solid var(--accent-green);
+            box-shadow: 0 0 40px rgba(0, 255, 170, 0.05);
+            max-width: 450px;
+            margin: 0 auto;
+            border-radius: 24px;
+            padding: 35px 25px;
+        }
+
+        .price-tag {
+            font-size: 4rem;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1;
+            margin: 20px 0;
+        }
+
+        .price-tag span {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        footer {
+            padding: 30px 0;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container header-wrap">
+            <div class="logo-text">WST</div>
+            <div class="live-counters">
+                <div class="counter-item">Синдикат: <span id="members-count">1042</span> чел</div>
+                <div class="counter-item">Avg: <span>2.5k$</span></div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="badge-main">Закрытый Альянс СНГ</div>
+            <h1><span>ЕБУЧИЙ КОНЦЕНТРАТ</span><br><span style="color: var(--accent-green);">СИЛЬНЕЙШИХ ЛЮДЕЙ</span></h1>
+            <p class="hero-desc">
+                WST — комьюнити молодых хастлеров со всего СНГ численностью 1000+ человек. Мы делаем деньги онлайн.
+            </p>
+            <button class="btn-cta" onclick="scrollToPaywall()">Вступить в WST</button>
+        </div>
+    </section>
+
+    <section class="spheres-section">
+        <div class="container">
+            <h2 class="section-title">Где мы <span>делаем деньги</span></h2>
+            <div class="spheres-grid">
+                <div class="sphere-card"><h3>Продажи</h3><p>Закрытие сделок, высокий чек, скрипты.</p></div>
+                <div class="sphere-card"><h3>Трафик</h3><p>Арбитраж, таргет, бесконечный поток лидов.</p></div>
+                <div class="sphere-card"><h3>Товарка</h3><p>E-commerce, тренды, масштабирование физических продуктов.</p></div>
+                <div class="sphere-card"><h3>Крипта</h3><p>Трейдинг, P2P, выжимка профита с рынка.</p></div>
+                <div class="sphere-card"><h3>Услуги</h3><p>B2B/B2C сегменты, упаковка личной экспертизы.</p></div>
+                <div class="sphere-card"><h3>Фитнес</h3><p>Инфопродукты, ведение клиентов и монетизация.</p></div>
+                <div class="sphere-card"><h3>Гэмблинг / Беттинг</h3><p>Работа с высокодоходными вертикалями трафика.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="academy-section">
+        <div class="container">
+            <h2 class="section-title">Чему мы вас <span>нахуй научим</span></h2>
+            <div class="skills-list">
+                <div class="skill-item">
+                    <div class="skill-icon">📞</div>
+                    <div class="skill-text">
+                        <h4>Продажи через текст и звонки</h4>
+                        <p>Между вами и обычным человеком без WST будет огромный барьер в самом фундаменте.</p>
+                    </div>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">✍️</div>
+                    <div class="skill-text">
+                        <h4>Продвинутый Копирайтинг</h4>
+                        <p>Правильно формулировать свои мысли. Вызывать дикий интерес людей через текст.</p>
+                    </div>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🎯</div>
+                    <div class="skill-text">
+                        <h4>Привлечение трафика FB / IG</h4>
+                        <p>Внутри находится мощное практическое обучение по запуску таргетированной рекламы.</p>
+                    </div>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🧠</div>
+                    <div class="skill-text">
+                        <h4>Прямая поддержка экспертов</h4>
+                        <p>В комьюнити состоят сильные специалисты в своих отраслях, готовые помочь и подсказать.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="audience-section">
+        <div class="container">
+            <h2 class="section-title">Для кого создано <span>WST</span>?</h2>
+            <div class="tabs-nav">
+                <button class="tab-btn active" onclick="openAudienceTab('pro-tab', this)">Я уже зарабатываю</button>
+                <button class="tab-btn" onclick="openAudienceTab('newbie-tab', this)">Я полный нуль</button>
+            </div>
+
+            <div class="tab-content active" id="pro-tab">
+                <div class="block-panel" style="background:var(--bg-card); padding:25px; border-radius:20px; border:1px solid var(--border);">
+                    <h3>Кратно увеличим показатели:</h3>
+                    <p style="margin-top:10px; color:var(--text-muted); line-height:1.5; font-size:0.9rem;">
+                        Если ты уже имеешь хороший доход — мы поможем его поднять, повысить чек, научить продавать лучше и привлекать трафик на свои услуги. Если будет запрос — разберем.
+                    </p>
+                </div>
+            </div>
+
+            <div class="tab-content" id="newbie-tab">
+                <div class="block-panel" style="background:var(--bg-card); padding:25px; border-radius:20px; border:1px solid var(--border);">
+                    <h3>У тебя не останется шансов проебывать жизнь:</h3>
+                    <p style="margin-top:10px; color:var(--text-muted); line-height:1.5; font-size:0.9rem;">
+                        В таком сильном окружении и с базой информации, которой нет в открытом доступе — у тебя нет шансов. Мы устраиваем своих людей на работу в продажи, находим офферы, пишем резюме и сопровождаем с нуля.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="inside-section">
+        <div class="container">
+            <div class="inside-panel">
+                <h2>СРЕДНИЙ ДОХОД НА ДУШУ НАСЕЛЕНИЯ</h2>
+                <div class="income-massive">2,000$ — 2,500$</div>
+                <p style="color: var(--text-muted); font-size:0.9rem; line-height:1.5;">
+                    Ты повысишь доход, получишь опыт людей, делающих большие деньги, пересмотришь всю свою жизнь, повысишь навыки в продажах и копирайтинге.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="paywall-section" id="paywall">
+        <div class="container">
+            <div class="pricing-card">
+                <div class="badge-main" style="color:var(--accent-cyan); border-color:rgba(0, 229, 255, 0.2);">ONE PRODUCT</div>
+                <h3 style="margin-top:15px; font-size:1.5rem;">Подписка WST</h3>
+                <p style="color: var(--text-muted); font-size:0.85rem; margin-top:5px;">Один продукт и одна подписка. Без скрытых курсов и дорогих пакетов.</p>
+                
+                <div class="price-tag">12$<span> / месяц</span></div>
+                
+                <button class="btn-cta" style="width:100%; max-width: none;" onclick="startPayment()">Занять место в WST</button>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 WST Syndicate. Telegram Mini App Edition.</p>
+        </div>
+    </footer>
+
+    <script>
+        // ИНИЦИАЛИЗАЦИЯ TELEGRAM MINI APP
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // Расширяем приложение на весь экран телефона
+
+        function openAudienceTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        function scrollToPaywall() {
+            document.getElementById('paywall').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Нативное окно Telegram вместо браузерного alert
+        function startPayment() {
+            tg.showPopup({
+                title: 'Вступление в WST',
+                message: 'Перенаправление на платежный шлюз. Стоимость подписки: 12$/месяц. Доступно для карт всех стран мира.',
+                buttons: [{id: 'ok', type: 'default', text: 'Погнали'}]
+            });
+        }
+
+        setInterval(() => {
+            const countEl = document.getElementById('members-count');
+            let current = parseInt(countEl.innerText);
+            if(Math.random() > 0.7) { countEl.innerText = current + 1; }
+        }, 4000);
+    </script>
+</body>
+</html>
